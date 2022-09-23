@@ -1,14 +1,18 @@
 {
-  "name": "@near-js/cookbook",
-  "private": true,
-  "version": "1.0.1",
-  "description": "",
-  "main": "main.js",
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "chalk": "^4.1.1",
-    "homedir": "^0.6.0",
-    "near-api-js": "workspace:*"
-  }
+    "name": "@near-js/cookbook",
+    "private": true,
+    "version": "1.0.1",
+    "description": "",
+    "main": "main.js",
+    "author": "",
+    "license": "ISC",
+    "scripts": {
+        "lint": "eslint --ext .js .",
+        "lint:fix": "pnpm lint --fix"
+    },
+    "dependencies": {
+        "chalk": "^4.1.1",
+        "homedir": "^0.6.0",
+        "near-api-js": "workspace:*"
+    }
 }
