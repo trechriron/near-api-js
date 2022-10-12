@@ -9,7 +9,6 @@ import { Action, addKey, deleteKey, deployContract, fullAccessKey, functionCall,
 import { FinalExecutionOutcome, TypedError } from './providers';
 import { fetchJson } from './utils/web';
 import { FunctionCallPermissionView } from './providers/provider';
-import { SignAndSendTransactionOptions } from './transaction_sender';
 
 export const MULTISIG_STORAGE_KEY = '__multisigRequest';
 export const MULTISIG_ALLOWANCE = new BN(parseNearAmount('1'));
@@ -63,7 +62,7 @@ export class AccountMultisig extends Account {
         return super.signAndSendTransaction({ receiverId, actions });
     }
 
-    async signAndSendTransaction({ receiverId, actions }: SignAndSendTransactionOptions): Promise<FinalExecutionOutcome> {
+    async signAndSendTransaction({ receiverId, actions }: { receiverId: string, actions: Action[] }): Promise<FinalExecutionOutcome> {
         const { accountId } = this;
 
         const args = Buffer.from(JSON.stringify({
@@ -238,7 +237,7 @@ export class Account2FA extends AccountMultisig {
      * Sign a transaction to preform a list of actions and broadcast it using the RPC API.
      * @see {@link providers/json-rpc-provider!JsonRpcProvider#sendTransaction | JsonRpcProvider.sendTransaction}
      */
-    async signAndSendTransaction({ receiverId, actions }: SignAndSendTransactionOptions): Promise<FinalExecutionOutcome> {
+    async signAndSendTransaction({ receiverId, actions }: { receiverId: string, actions: Action[] }): Promise<FinalExecutionOutcome> {
         await super.signAndSendTransaction({ receiverId, actions });
         // TODO: Should following override onRequestResult in superclass instead of doing custom signAndSendTransaction?
         await this.sendCode();
