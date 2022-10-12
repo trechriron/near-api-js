@@ -6,8 +6,9 @@ import { AccessKeyView, AccessKeyViewRaw, FinalExecutionOutcome } from './provid
 import { Action, SignedTransaction, signTransaction } from './transaction';
 import { logWarning } from './utils/errors';
 import { PublicKey } from './utils/key_pair';
+import { printLogsAndFailures } from './utils/logging';
 import exponentialBackoff from './utils/exponential-backoff';
-import { parseResultError, parseRpcError, ServerError } from './utils/rpc_errors';
+import { parseResultError } from './utils/rpc_errors';
 
 // Default number of retries with different nonce before giving up on a transaction.
 const TX_NONCE_RETRY_NUMBER = 12;
@@ -35,12 +36,6 @@ export interface SignAndSendTransactionOptions {
      */
     walletCallbackUrl?: string;
     returnError?: boolean;
-}
-
-interface ReceiptLogWithFailure {
-    receiptIds: [string];
-    logs: [string];
-    failure: ServerError;
 }
 
 export class TransactionSender {
@@ -108,17 +103,10 @@ export class TransactionSender {
             throw new TypedError('nonce retries exceeded for transaction. This usually means there are too many parallel requests with the same access key.', 'RetriesExceeded');
         }
 
-        const flatLogs = [result.transaction_outcome, ...result.receipts_outcome].reduce((acc, it) => {
-            if (it.outcome.logs.length ||
-                (typeof it.outcome.status === 'object' && typeof it.outcome.status.Failure === 'object')) {
-                return acc.concat({
-                    'receiptIds': it.outcome.receipt_ids,
-                    'logs': it.outcome.logs,
-                    'failure': typeof it.outcome.status.Failure != 'undefined' ? parseRpcError(it.outcome.status.Failure) : null
-                });
-            } else return acc;
-        }, []);
-        this.printLogsAndFailures(signedTx.transaction.receiverId, flatLogs);
+        printLogsAndFailures({
+            contractId: signedTx.transaction.receiverId,
+            outcome: result,
+        });
 
         // Should be falsy if result.status.Failure is null
         if (!returnError && typeof result.status === 'object' && typeof result.status.Failure === 'object'  && result.status.Failure !== null) {
@@ -186,28 +174,6 @@ export class TransactionSender {
             }
 
             throw e;
-        }
-    }
-
-    /** @hidden */
-    protected printLogsAndFailures(contractId: string, results: [ReceiptLogWithFailure]) {
-        if (!process.env['NEAR_NO_LOGS']) {
-            for (const result of results) {
-                console.log(`Receipt${result.receiptIds.length > 1 ? 's' : ''}: ${result.receiptIds.join(', ')}`);
-                this.printLogs(contractId, result.logs, '\t');
-                if (result.failure) {
-                    console.warn(`\tFailure [${contractId}]: ${result.failure}`);
-                }
-            }
-        }
-    }
-
-    /** @hidden */
-    protected printLogs(contractId: string, logs: string[], prefix = '') {
-        if (!process.env['NEAR_NO_LOGS']) {
-            for (const log of logs) {
-                console.log(`${prefix}Log [${contractId}]: ${log}`);
-            }
         }
     }
 }

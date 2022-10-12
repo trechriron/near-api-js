@@ -26,6 +26,7 @@ import {
 } from './providers/provider';
 import { Connection } from './connection';
 import { PublicKey } from './utils/key_pair';
+import { printLogs } from './utils/logging';
 import { PositionalArgsError } from './utils/errors';
 import { DEFAULT_FUNCTION_CALL_GAS } from './constants';
 import { TransactionBuilder } from './transaction_builder';
@@ -335,7 +336,7 @@ export class Account extends TransactionSender {
         });
 
         if (result.logs) {
-            this.printLogs(contractId, result.logs);
+            printLogs({ contractId, logs: result.logs });
         }
 
         return result.result && result.result.length > 0 && parse(Buffer.from(result.result));
