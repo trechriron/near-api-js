@@ -115,14 +115,15 @@ function bytesJsonStringify(input: any): Buffer {
  * @see [https://docs.near.org/docs/develop/front-end/naj-quick-reference#account](https://docs.near.org/tools/near-api-js/quick-reference#account)
  * @see [Account Spec](https://nomicon.io/DataStructures/Account.html)
  */
-export class Account extends TransactionSender {
+export class Account {
     readonly connection: Connection;
     readonly accountId: string;
+    readonly sender: TransactionSender;
 
     constructor(connection: Connection, accountId: string) {
-        super(connection, accountId);
         this.connection = connection;
         this.accountId = accountId;
+        this.sender = new TransactionSender({ connection });
     }
 
     /**
@@ -489,9 +490,9 @@ export class Account extends TransactionSender {
 
     createTransaction(receiver: Account | string): TransactionBuilder {
         return new TransactionBuilder({
-            connection: this.connection,
+            sender: this.sender,
             senderId: this.accountId,
-            receiverId: typeof receiver === 'string' ? receiver : receiver.accountId
+            receiverId: typeof receiver === 'string' ? receiver : receiver.accountId,
         });
     }
 }
