@@ -23,6 +23,7 @@ const TX_NONCE_RETRY_WAIT_BACKOFF = 1.5;
  * Options used to initiate sining and sending transactions
  */
 export interface SignAndSendTransactionOptions {
+    signerId: string;
     receiverId: string;
     actions: Action[];
     /**
@@ -40,12 +41,10 @@ export interface SignAndSendTransactionOptions {
 
 export class TransactionSender {
     readonly connection: Connection;
-    readonly accountId: string;
     accessKeyByPublicKeyCache: { [key: string]: AccessKeyView } = {};
 
-    constructor(connection: Connection, accountId: string) {
+    constructor({ connection }: { connection: Connection }) {
         this.connection = connection;
-        this.accountId = accountId;
     }
 
     /**
@@ -54,10 +53,10 @@ export class TransactionSender {
      * @param actions list of actions to perform as part of the transaction
      * @see {@link providers/json-rpc-provider!JsonRpcProvider#sendTransaction | JsonRpcProvider.sendTransaction}
      */
-    protected async signTransaction(receiverId: string, actions: Action[]): Promise<[Uint8Array, SignedTransaction]> {
-        const accessKeyInfo = await this.findAccessKey(receiverId, actions);
+    async signTransaction({ signerId, receiverId, actions }: { signerId: string, receiverId: string, actions: Action[] }): Promise<[Uint8Array, SignedTransaction]> {
+        const accessKeyInfo = await this.findAccessKey({ signerId });
         if (!accessKeyInfo) {
-            throw new TypedError(`Can not sign transactions for account ${this.accountId} on network ${this.connection.networkId}, no matching key pair exists for this account`, 'KeyNotFound');
+            throw new TypedError(`Can not sign transactions for account ${signerId} on network ${this.connection.networkId}, no matching key pair exists for this account`, 'KeyNotFound');
         }
         const { accessKey } = accessKeyInfo;
 
@@ -66,7 +65,7 @@ export class TransactionSender {
 
         const nonce = accessKey.nonce.add(new BN(1));
         return await signTransaction(
-            receiverId, nonce, actions, baseDecode(blockHash), this.connection.signer, this.accountId, this.connection.networkId
+            receiverId, nonce, actions, baseDecode(blockHash), this.connection.signer, signerId, this.connection.networkId
         );
     }
 
@@ -74,11 +73,11 @@ export class TransactionSender {
      * Sign a transaction to preform a list of actions and broadcast it using the RPC API.
      * @see {@link providers/json-rpc-provider!JsonRpcProvider#sendTransaction | JsonRpcProvider.sendTransaction}
      */
-    protected async signAndSendTransaction({ receiverId, actions, returnError }: SignAndSendTransactionOptions): Promise<FinalExecutionOutcome> {
+    async signAndSendTransaction({ signerId, receiverId, actions, returnError }: SignAndSendTransactionOptions): Promise<FinalExecutionOutcome> {
         let txHash, signedTx;
         // TODO: TX_NONCE (different constants for different uses of exponentialBackoff?)
         const result = await exponentialBackoff(TX_NONCE_RETRY_WAIT, TX_NONCE_RETRY_NUMBER, TX_NONCE_RETRY_WAIT_BACKOFF, async () => {
-            [txHash, signedTx] = await this.signTransaction(receiverId, actions);
+            [txHash, signedTx] = await this.signTransaction({ signerId, receiverId, actions });
             const publicKey = signedTx.transaction.publicKey;
 
             try {
@@ -126,16 +125,13 @@ export class TransactionSender {
     /**
      * Finds the {@link providers/provider!AccessKeyView} associated with the accounts {@link utils/key_pair!PublicKey} stored in the {@link key_stores/keystore!KeyStore}.
      *
-     * @todo Find matching access key based on transaction (i.e. receiverId and actions)
-     *
-     * @param receiverId currently unused (see todo)
-     * @param actions currently unused (see todo)
+     * @param params {object}
+     * @param params.signerId {string} account to fetch access key for
      * @returns `{ publicKey PublicKey; accessKey: AccessKeyView }`
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async findAccessKey(receiverId: string, actions: Action[]): Promise<{ publicKey: PublicKey; accessKey: AccessKeyView }> {
+    async findAccessKey({ signerId }: { signerId: string }): Promise<{ publicKey: PublicKey; accessKey: AccessKeyView }> {
         // TODO: Find matching access key based on transaction (i.e. receiverId and actions)
-        const publicKey = await this.connection.signer.getPublicKey(this.accountId, this.connection.networkId);
+        const publicKey = await this.connection.signer.getPublicKey(signerId, this.connection.networkId);
         if (!publicKey) {
             throw new TypedError(`no matching key pair found in ${this.connection.signer}`, 'PublicKeyNotFound');
         }
@@ -148,7 +144,7 @@ export class TransactionSender {
         try {
             const rawAccessKey = await this.connection.provider.query<AccessKeyViewRaw>({
                 request_type: 'view_access_key',
-                account_id: this.accountId,
+                account_id: signerId,
                 public_key: publicKey.toString(),
                 finality: 'optimistic'
             });
