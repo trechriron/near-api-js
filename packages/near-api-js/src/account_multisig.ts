@@ -329,17 +329,23 @@ export class Account2FA extends AccountMultisig {
         ] : [];
     }
 
-    async get2faDisableKeyConversionActions() {
-        const { accountId } = this;
-        const accessKeys = await this.getAccessKeys();
-        const lak2fak = accessKeys
-            .filter(({ access_key }) => access_key.permission !== 'FullAccess')
+    private async get2faLimitedAccessKeys() {
+        return (await this.getAccessKeys())
             .filter(({ access_key }) => {
+                if (access_key.permission === 'FullAccess') {
+                    return false;
+                }
+
                 const perm = (access_key.permission as FunctionCallPermissionView).FunctionCall;
-                return perm.receiver_id === accountId &&
+                return perm.receiver_id === this.accountId &&
                     perm.method_names.length === 4 &&
                     perm.method_names.includes('add_request_and_confirm');
             });
+    }
+
+    async get2faDisableKeyConversionActions() {
+        const { accountId } = this;
+        const lak2fak = await this.get2faLimitedAccessKeys();
         const confirmOnlyKey = PublicKey.from((await this.postSignedJson('/2fa/getAccessKey', { accountId })).publicKey);
         return [
             deleteKey(confirmOnlyKey),
