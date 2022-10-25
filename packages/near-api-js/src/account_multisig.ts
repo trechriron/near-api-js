@@ -329,7 +329,7 @@ export class Account2FA extends AccountMultisig {
         ] : [];
     }
 
-    private async get2faLimitedAccessKeys() {
+    async get2faLimitedAccessKeys() {
         return (await this.getAccessKeys())
             .filter(({ access_key }) => {
                 if (access_key.permission === 'FullAccess') {
