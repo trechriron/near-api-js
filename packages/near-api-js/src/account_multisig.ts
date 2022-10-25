@@ -355,15 +355,23 @@ export class Account2FA extends AccountMultisig {
     }
 
     /**
+     * Validate the deployed multisig contract state
+     * @throws TypedError
+     */
+    async validateMultisigState() {
+        const { stateStatus } = await this.checkMultisigCodeAndStateStatus();
+        if (stateStatus !== MultisigStateStatus.VALID_STATE && stateStatus !== MultisigStateStatus.STATE_NOT_INITIALIZED) {
+            throw new TypedError(`Can not deploy a contract to account ${this.accountId} on network ${this.connection.networkId}, the account state could not be verified.`, 'ContractStateUnknown');
+        }
+    }
+
+    /**
      * This method converts LAKs back to FAKs, clears state and deploys an 'empty' contract (contractBytes param)
      * @param [contractBytes]{@link https://github.com/near/near-wallet/blob/master/packages/frontend/src/wasm/main.wasm?raw=true}
      * @param [cleanupContractBytes]{@link https://github.com/near/core-contracts/blob/master/state-cleanup/res/state_cleanup.wasm?raw=true}
      */
     async disable(contractBytes: Uint8Array, cleanupContractBytes: Uint8Array) {
-        const { stateStatus } = await this.checkMultisigCodeAndStateStatus();
-        if(stateStatus !== MultisigStateStatus.VALID_STATE && stateStatus !== MultisigStateStatus.STATE_NOT_INITIALIZED) {
-            throw new TypedError(`Can not deploy a contract to account ${this.accountId} on network ${this.connection.networkId}, the account state could not be verified.`, 'ContractStateUnknown');
-        }
+        await this.validateMultisigState();
 
         let deleteAllRequestsError;
         await this.deleteAllRequests().catch(e => deleteAllRequestsError = e);
