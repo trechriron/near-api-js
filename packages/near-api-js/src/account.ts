@@ -421,6 +421,25 @@ export class Account {
         });
     }
 
+    async addKeys(publicKeys: string[], contractId?: string, methodNames?: string | string[], amount?: BN): Promise<FinalExecutionOutcome> {
+        if (!methodNames) {
+            methodNames = [];
+        }
+        if (!Array.isArray(methodNames)) {
+            methodNames = [methodNames];
+        }
+        let accessKey;
+        if (!contractId) {
+            accessKey = fullAccessKey();
+        } else {
+            accessKey = functionCallAccessKey(contractId, methodNames, amount);
+        }
+        return this.signAndSendTransaction({
+            receiverId: this.accountId,
+            actions: publicKeys.map((publicKey) => addKey(PublicKey.from(publicKey), accessKey)),
+        });
+    }
+
     /**
      * @param publicKey The public key to be deleted
      * @returns {Promise<FinalExecutionOutcome>}
@@ -429,6 +448,12 @@ export class Account {
         return this.signAndSendTransaction({
             receiverId: this.accountId,
             actions: [deleteKey(PublicKey.from(publicKey))]
+        });
+    }
+    async deleteKeys(publicKeys: string[]): Promise<FinalExecutionOutcome> {
+        return this.signAndSendTransaction({
+            receiverId: this.accountId,
+            actions: publicKeys.map((publicKey) => deleteKey(PublicKey.from(publicKey)))
         });
     }
 

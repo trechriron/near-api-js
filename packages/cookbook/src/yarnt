@@ -1,0 +1,27 @@
+Keys for account yarnt.testnet
+[
+  {
+    access_key: { nonce: 94756109000000, permission: 'FullAccess' },
+    public_key: 'ed25519:3qpaY5b5ZS9dbEiiCvkj7LucB5JJHrEd3zXQrpYvHxX3'
+  },
+  {
+    access_key: { nonce: 94755914000003, permission: 'FullAccess' },
+    public_key: 'ed25519:6X3ZPjRNjcQ7K3rU2FqrguL67VvYezn6Cn2skUrsWH7X'
+  },
+  {
+    access_key: { nonce: 101537579000001, permission: 'FullAccess' },
+    public_key: 'ed25519:7yZoeL3fTYSSoTfFVVJ6P3B9DCk9nfLWWxZzLXrNnwPG'
+  },
+  {
+    access_key: { nonce: 101537604000009, permission: 'FullAccess' },
+    public_key: 'ed25519:8urMtT7Ej7JmM2sbcR4ve1r2nx4v761nE4Tf4jFYfiaW'
+  },
+  {
+    access_key: { nonce: 95411938000000, permission: 'FullAccess' },
+    public_key: 'ed25519:9sDNC7yH975Q8PYPnQEfPBRftHqMHQUBmCHQ8KR2oiuy'
+  },
+  {
+    access_key: { nonce: 101537623000000, permission: 'FullAccess' },
+    public_key: 'ed25519:Gd8tfqgFvXTtdYNHw6rvz299JVsV7TzBsEKDee4cCMhw'
+  }
+]
