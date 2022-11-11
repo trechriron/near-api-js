@@ -65,7 +65,7 @@ module.exports = {
 
 if (require.main === module) {
     (async function () {
-        const accountId = '2965-test.testnet';
+        const accountId = 'gormp.testnet';
         const networkId = 'testnet';
         const nodeUrl = 'https://rpc.testnet.near.org';
 
@@ -76,8 +76,8 @@ if (require.main === module) {
         const near = await connect({ keyStore, networkId, nodeUrl });
         const account = await near.account(accountId);
 
-        const recoveryPublicKey = 'ed25519:9jGxm3yvGbu66BLAo9hJ3gz1pixHX2LhBXHgHHmZGKEj';
-        const signingPublicKey = 'ed25519:9QnB8vEY6shC8TsMDgugXejCSMhCCLANjpnXQMJn2rhd';
+        const recoveryPublicKey = 'ed25519:69FQR4c1ccAyYnto8cqA9hxxkRfZqnBQsy4yktVBKzmN';
+        const signingPublicKey = 'ed25519:AHQXHW7zH5vS2EbNsyPaxKyB8Vgb2vJhr9aNXH1KeWQ2';
 
         const rl = readline.createInterface({
             input: process.stdin,
@@ -95,8 +95,8 @@ if (require.main === module) {
             keys: (await msAccount.getAccessKeys()).length,
         });
 
-        await deleteAccessKeys({ account, whitelistedKeys: [recoveryPublicKey, signingPublicKey] });
-        await deployMultisig({ accountId, connection: near.connection });
+        // await deleteAccessKeys({ account, whitelistedKeys: [recoveryPublicKey, signingPublicKey] });
+        // await deployMultisig({ accountId, connection: near.connection });
         await seedAccessKeys({
             account,
             keyStore,
