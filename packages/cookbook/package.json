@@ -15,7 +15,8 @@
         "bn.js": "5.2.1",
         "chalk": "^4.1.1",
         "homedir": "^0.6.0",
-        "near-api-js": "workspace:*"
+        "near-api-js": "workspace:*",
+        "near-seed-phrase": "^0.2.0"
     },
     "devDependencies": {
         "jest": "^26.0.1"
