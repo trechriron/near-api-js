@@ -53,7 +53,7 @@ async function deployMultisig({ accountId, connection, detail, kind }) {
         publicKey: (await connection.signer.getPublicKey(accountId, 'testnet')).toString(),
     });
     await account.postSignedJson('/2fa/init', { accountId, method: { detail, kind }});
-    await account.deployMultisig(fs.readFileSync(path.join(os.homedir(), 'workspace/near-wallet/packages/frontend/src/wasm/multisig.wasm')));
+    await account.deployMultisig(fs.readFileSync(path.join(__dirname, 'contracts/multisig.wasm')));
 }
 
 // async function disableMultisig({ accountId, connection }) {
