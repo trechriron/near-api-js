@@ -16,7 +16,7 @@ async function createFullAccessKey({ keyStore, networkId }) {
     return publicKey;
 }
 
-async function seedAccessKeys({ account, keyStore, keysToCreate, networkId }) {
+async function seedAccessKeys({ account, keyStore, keysToCreate, networkId, isMultisig }) {
     const keys = [];
     for (let i = 0; i < keysToCreate; i++) {
         keys.push(await createFullAccessKey({
@@ -25,7 +25,7 @@ async function seedAccessKeys({ account, keyStore, keysToCreate, networkId }) {
             networkId,
         }));
     }
-    await account.addKeys(keys, account.accountId, [
+    await account.addKeys(keys, isMultisig && account.accountId, [
         'add_request',
         'add_request_and_confirm',
         'delete_request',
@@ -106,6 +106,7 @@ if (require.main === module) {
         console.log({
             accountId,
             publicKey,
+            secretKey,
             seedPhrase,
         });
 
@@ -122,14 +123,6 @@ if (require.main === module) {
                     throw new Error(`email or phone number required for ${recoveryMethod}`);
                 }
                 await deployMultisig({ accountId, connection: account.connection, detail: recoveryMethodDetail, kind: recoveryMethod });
-                if (multisigKeysToCreate) {
-                    await seedAccessKeys({
-                        account,
-                        keyStore,
-                        keysToCreate: multisigKeysToCreate,
-                        networkId: 'testnet',
-                    });
-                }
                 break;
             }
             case 'email':
@@ -158,6 +151,16 @@ if (require.main === module) {
                 console.warn('invalid recovery method kind, specify one of \'phone\', \'email\', \'2fa-email\', \'2fa-phone\'');
                 break;
             }
+            }
+
+            if (multisigKeysToCreate) {
+                await seedAccessKeys({
+                    isMultisig: recoveryMethod.startsWith('2fa'),
+                    account,
+                    keyStore,
+                    keysToCreate: multisigKeysToCreate,
+                    networkId: 'testnet',
+                });
             }
         }
     }());

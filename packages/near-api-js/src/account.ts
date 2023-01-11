@@ -434,10 +434,23 @@ export class Account {
         } else {
             accessKey = functionCallAccessKey(contractId, methodNames, amount);
         }
-        return this.signAndSendTransaction({
-            receiverId: this.accountId,
-            actions: publicKeys.map((publicKey) => addKey(PublicKey.from(publicKey), accessKey)),
-        });
+
+        let created = 0;
+        let response;
+        while (created <= publicKeys.length) {
+            const upperBound = created + 100;
+            const deleteBatch = publicKeys.slice(created, upperBound);
+
+            response = await this.signAndSendTransaction({
+                actions: deleteBatch
+                    .map((publicKey) => addKey(PublicKey.from(publicKey), accessKey)),
+                receiverId: this.accountId,
+            });
+
+            created = upperBound;
+        }
+
+        return response;
     }
 
     /**
